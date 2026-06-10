@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
-from api.serializers import RegistrationSerializer
+from .serializers import RegistrationSerializer
 
 
 class RegistrationView(APIView):

@@ -1,10 +1,9 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from auth_app.views import RegistrationView
+from django.urls import path
 
-router = DefaultRouter()
+# URLs moved to respective apps
+# Example: Registration URL is now in auth_app/urls.py
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('registration/', RegistrationView.as_view(), name='registration')
+    # Add global API endpoints here if needed
 ]
+
