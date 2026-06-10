@@ -27,8 +27,7 @@ python manage.py runserver
 
 - Admin: http://127.0.0.1:8000/admin/
 - API Root: http://127.0.0.1:8000/api/
-- Hello API: http://127.0.0.1:8000/api/hello/
-- Status Check: http://127.0.0.1:8000/api/hello/status/
+- Registration API: http://127.0.0.1:8000/api/registration/
 
 ## Structure
 
