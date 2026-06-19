@@ -122,11 +122,6 @@ KanMind-Backend/
 
 ## Development Commands
 
-### Create a new app
-```bash
-python manage.py startapp app_name
-```
-
 ### Make migrations after model changes
 ```bash
 python manage.py makemigrations
