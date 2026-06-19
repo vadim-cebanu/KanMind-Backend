@@ -31,6 +31,15 @@ class TaskSerializer(serializers.ModelSerializer):
                   'assignee', 'reviewer', 'due_date', 'comments_count']
 
     def get_comments_count(self, obj):
+        """
+        Calculate the number of comments on this task.
+        
+        Args:
+            obj: Task instance
+            
+        Returns:
+            Integer count of comments
+        """
         """Returns the number of comments on this task"""
         return obj.comments.count()
 
@@ -54,7 +63,18 @@ class TaskCreateSerializer(serializers.ModelSerializer):
                   'assignee_id', 'reviewer_id', 'due_date']
 
     def validate(self, attrs):
-        """Both assignee and reviewer must already be members of the board."""
+        """
+        Validate that assignee and reviewer are members of the board.
+        
+        Args:
+            attrs: Dictionary of validated field data
+            
+        Returns:
+            Validated attributes
+            
+        Raises:
+            ValidationError: If assignee or reviewer is not a board member
+        """
         board = attrs.get('board')
         assignee = attrs.get('assignee')
         reviewer = attrs.get('reviewer')
@@ -66,6 +86,15 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        """
+        Create a new task with the current user as creator.
+        
+        Args:
+            validated_data: Dictionary of validated task data
+            
+        Returns:
+            Newly created Task instance
+        """
         creator = self.context['request'].user
         return Task.objects.create(creator=creator, **validated_data)
 
@@ -89,6 +118,18 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
                   'assignee_id', 'reviewer_id', 'due_date']
 
     def validate(self, attrs):
+        """
+        Validate that assignee and reviewer are members of the task's board.
+        
+        Args:
+            attrs: Dictionary of validated field data
+            
+        Returns:
+            Validated attributes
+            
+        Raises:
+            ValidationError: If assignee or reviewer is not a board member
+        """
         board = self.instance.board
         assignee = attrs.get('assignee')
         reviewer = attrs.get('reviewer')

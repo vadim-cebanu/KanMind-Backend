@@ -14,6 +14,16 @@ class RegistrationView(APIView):
     permission_classes = [AllowAny]  # No Permissions required
 
     def post(self, request):
+        """
+        Handle user registration POST request.
+        
+        Args:
+            request: HTTP request containing fullname, email, password, repeated_password
+            
+        Returns:
+            Response with token, fullname, email, user_id on success (201)
+            Response with validation errors on failure (400)
+        """
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -40,6 +50,16 @@ class LoginView(APIView):
     permission_classes = [AllowAny]  # No Permissions required
 
     def post(self, request):
+        """
+        Handle user login POST request.
+        
+        Args:
+            request: HTTP request containing email and password
+            
+        Returns:
+            Response with token, fullname, email, user_id on success (200)
+            Response with validation errors on failure (400)
+        """
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data['user']

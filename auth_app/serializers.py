@@ -17,11 +17,32 @@ class RegistrationSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
+        """
+        Validate that password and repeated_password match.
+        
+        Args:
+            attrs: Dictionary of validated field data
+            
+        Returns:
+            Validated attributes
+            
+        Raises:
+            ValidationError: If passwords don't match
+        """
         if attrs['password'] != attrs['repeated_password']:
             raise serializers.ValidationError({'repeated_password': 'Passwords do not match.'})
         return attrs
 
     def create(self, validated_data):
+        """
+        Create a new user with the validated data.
+        
+        Args:
+            validated_data: Dictionary of validated field data
+            
+        Returns:
+            Newly created User instance
+        """
         return User.objects.create_user(
             email=validated_data['email'],
             fullname=validated_data['fullname'],
@@ -38,6 +59,18 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
 
     def validate(self, data):
+        """
+        Validate user credentials and authenticate.
+        
+        Args:
+            data: Dictionary containing email and password
+            
+        Returns:
+            Validated data with authenticated user
+            
+        Raises:
+            ValidationError: If credentials are invalid or user is inactive
+        """
         email = data.get('email')
         password = data.get('password')
 

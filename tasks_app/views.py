@@ -17,6 +17,17 @@ class TaskCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """
+        Create a new task on a board.
+        
+        Args:
+            request: HTTP request with task data (board, title, description, etc.)
+            
+        Returns:
+            Response with created task data (201)
+            Response with permission error if not board member (403)
+            Response with validation errors (400)
+        """
         serializer = TaskCreateSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             board = serializer.validated_data['board']
@@ -42,6 +53,17 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def update(self, request, *args, **kwargs):
+        """
+        Update an existing task.
+        
+        Args:
+            request: HTTP request with task update data
+            
+        Returns:
+            Response with updated task data (200)
+            Response with permission error if not board member (403)
+            Response with validation errors (400)
+        """
         task = self.get_object()
 
         is_member = task.board.owner == request.user or task.board.members.filter(id=request.user.id).exists()
@@ -59,6 +81,16 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, *args, **kwargs):
+        """
+        Delete a task.
+        
+        Args:
+            request: HTTP request
+            
+        Returns:
+            Response with no content on success (204)
+            Response with permission error if not creator or board owner (403)
+        """
         task = self.get_object()
 
         if task.creator != request.user and task.board.owner != request.user:
@@ -79,6 +111,12 @@ class TasksAssignedToMeView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """
+        Return tasks assigned to the current user.
+        
+        Returns:
+            QuerySet of Task objects where user is assignee
+        """
         return Task.objects.filter(assignee=self.request.user)
 
 
@@ -91,6 +129,12 @@ class TasksReviewingView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """
+        Return tasks where the current user is reviewer.
+        
+        Returns:
+            QuerySet of Task objects where user is reviewer
+        """
         return Task.objects.filter(reviewer=self.request.user)
 
 
@@ -117,6 +161,17 @@ class CommentListCreateView(APIView):
         return task, None
 
     def get(self, request, task_id):
+        """
+        List all comments for a task.
+        
+        Args:
+            request: HTTP request
+            task_id: ID of the task
+            
+        Returns:
+            Response with list of comments (200)
+            Response with permission error if not board member (403)
+        """
         task, error = self.get_task_or_403(request, task_id)
         if error:
             return error
@@ -124,6 +179,18 @@ class CommentListCreateView(APIView):
         return Response(CommentSerializer(comments, many=True).data, status=status.HTTP_200_OK)
 
     def post(self, request, task_id):
+        """
+        Create a new comment on a task.
+        
+        Args:
+            request: HTTP request with comment content
+            task_id: ID of the task
+            
+        Returns:
+            Response with created comment data (201)
+            Response with permission error if not board member (403)
+            Response with validation errors (400)
+        """
         task, error = self.get_task_or_403(request, task_id)
         if error:
             return error
@@ -143,6 +210,18 @@ class CommentDeleteView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, task_id, comment_id):
+        """
+        Delete a comment.
+        
+        Args:
+            request: HTTP request
+            task_id: ID of the task
+            comment_id: ID of the comment
+            
+        Returns:
+            Response with no content on success (204)
+            Response with permission error if not comment author (403)
+        """
         comment = get_object_or_404(Comment, id=comment_id, task_id=task_id)
 
         if comment.author != request.user:

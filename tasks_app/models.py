@@ -70,6 +70,7 @@ class Task(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
+        """Return string representation of task (title)."""
         return self.title
 
 
@@ -88,4 +89,5 @@ class Comment(models.Model):
         ordering = ['created_at']  # comments are listed chronologically
 
     def __str__(self):
+        """Return string representation of comment."""
         return f'Comment by {self.author} on {self.task}'
