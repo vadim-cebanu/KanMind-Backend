@@ -1,60 +1,160 @@
-# core
+# KanMind Backend
 
-Django project with Django REST Framework automatically generated.
+Django REST Framework backend for the KanMind Kanban board application. This API provides user authentication, board management, and task tracking functionality.
+
+## Prerequisites
+
+- Python 3.8 or higher
+- pip (Python package installer)
 
 ## Installation
 
-1. Activate virtual environment:
-   - Windows: `venv\Scripts\activate`
-   - Linux/Mac: `source venv/bin/activate`
+Follow these steps to set up the project locally:
 
-2. Install dependencies (if not already installed):
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 1. Create Virtual Environment
 
-3. Configure environment variables:
-   - Copy `.env.example` to `.env` (already done during setup)
-   - Update `.env` with your specific settings if needed
+```bash
+python3 -m venv venv
+```
 
-## Running
+### 2. Activate Virtual Environment
+
+Linux/Mac:
+```bash
+source venv/bin/activate
+```
+
+Windows:
+```bash
+venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure Environment Variables
+
+Copy the example environment file and update it with your settings:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and update the following variables:
+- `SECRET_KEY` - Django secret key (generate a new one for production)
+- `DEBUG` - Set to `True` for development, `False` for production
+- `ALLOWED_HOSTS` - Comma-separated list of allowed hosts
+
+To generate a new secret key:
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+### 5. Run Database Migrations
+
+```bash
+python manage.py migrate
+```
+
+### 6. Create Superuser (Optional)
+
+To access the Django admin panel:
+
+```bash
+python manage.py createsuperuser
+```
+
+## Running the Application
+
+Start the development server:
 
 ```bash
 python manage.py runserver
 ```
 
+The API will be available at: http://127.0.0.1:8000/
+
 ## API Endpoints
 
-- Admin: http://127.0.0.1:8000/admin/
-- API Root: http://127.0.0.1:8000/api/
-- Registration API: http://127.0.0.1:8000/api/registration/
+### Authentication
+- `POST /api/registration/` - User registration
+- `POST /api/login/` - User login
 
-## Structure
+### Boards
+- `GET /api/boards/` - List all boards
+- `POST /api/boards/` - Create a new board
+- `GET /api/boards/<id>/` - Get board details
+- `PUT /api/boards/<id>/` - Update board
+- `DELETE /api/boards/<id>/` - Delete board
+- `POST /api/email-check/` - Check if email exists
 
-- `core/` - Main settings
-- `api/` - Sample app with API
-- `venv/` - Virtual environment
-- `.env` - Environment variables (SECRET_KEY, DEBUG, etc.)
-- `.env.example` - Template for environment variables
-- `manage.py` - Django management script
+### Tasks
+- `POST /api/tasks/` - Create a new task
+- `GET /api/tasks/assigned-to-me/` - Get tasks assigned to current user
+- `GET /api/tasks/reviewing/` - Get tasks for review
+- `GET /api/tasks/<id>/` - Get task details
+- `PUT /api/tasks/<id>/` - Update task
+- `DELETE /api/tasks/<id>/` - Delete task
+- `GET /api/tasks/<id>/comments/` - List task comments
+- `POST /api/tasks/<id>/comments/` - Add comment to task
+- `DELETE /api/tasks/<id>/comments/<comment_id>/` - Delete comment
 
-## Development
+### Admin Panel
+- `GET /admin/` - Django admin interface
 
-To create a superuser:
-```bash
-python manage.py createsuperuser
+## Project Structure
+
+```
+KanMind-Backend/
+├── auth_app/           # User authentication and registration
+├── boards_app/         # Board management
+├── tasks_app/          # Task and comment management
+├── core/               # Project settings and configuration
+├── manage.py           # Django management script
+├── requirements.txt    # Python dependencies
+├── .env                # Environment variables (not in git)
+├── .env.example        # Environment variables template
+└── db.sqlite3          # SQLite database (created after migrations)
 ```
 
-To create a new app:
+## Development Commands
+
+### Create a new app
 ```bash
 python manage.py startapp app_name
 ```
 
-## Environment Variables
+### Make migrations after model changes
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
 
-The project uses python-dotenv to load environment variables from `.env` file:
-- `SECRET_KEY` - Django secret key (auto-generated)
-- `DEBUG` - Debug mode (True/False)
-- `ALLOWED_HOSTS` - Comma-separated list of allowed hosts
+### Run tests
+```bash
+python manage.py test
+```
 
-Add more variables as needed for your project.
+### Collect static files
+```bash
+python manage.py collectstatic
+```
+
+## Technology Stack
+
+- Django 6.0.6
+- Django REST Framework 3.17.1
+- Django CORS Headers 4.9.0
+- Python Dotenv 1.2.2
+- SQLite (default database)
+
+## Notes
+
+- This is a development server. Do not use it in production.
+- For production deployment, use a proper WSGI/ASGI server like Gunicorn or uWSGI.
+- Change `DEBUG=False` and set proper `ALLOWED_HOSTS` in production.
+- Consider using PostgreSQL or MySQL for production instead of SQLite.
+- The default CORS settings allow all origins for development. Restrict this in production.
