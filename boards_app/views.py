@@ -1,3 +1,4 @@
+# boards/views.py
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -14,6 +15,7 @@ from .serializers import (
     BoardUpdateResponseSerializer,
     EmailCheckSerializer,
 )
+from .permissions import IsBoardOwnerOrMember, IsBoardOwner
 
 User = get_user_model()
 
@@ -31,7 +33,7 @@ class BoardListCreateView(generics.ListCreateAPIView):
         Return boards where the current user is either owner or member.
         
         Returns:
-            QuerySet of Board objects filtered for current user
+            QuerySet: Board objects filtered for current user
         """
         user = self.request.user
         return Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
@@ -55,42 +57,49 @@ class BoardDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Board.objects.all()
     permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        """
-        Get board and enforce permissions.
-        
-        Returns:
-            Board instance if user has permission
-            
-        Raises:
-            PermissionDenied: If user lacks required permissions
-        """
-        board = get_object_or_404(Board, pk=self.kwargs['pk'])
-        user = self.request.user
-        is_member = board.owner == user or board.members.filter(id=user.id).exists()
-
-        if self.request.method == 'DELETE':
-            # only the owner may delete - documented explicitly
-            if board.owner != user:
-                self.permission_denied(self.request, message='Only the board owner can delete this board.')
-        else:
-            # GET / PATCH: owner or member
-            if not is_member:
-                self.permission_denied(self.request, message='You must be a member of this board.')
-
-        return board
-
     def get_serializer_class(self):
         """
         Return appropriate serializer based on HTTP method.
         
         Returns:
-            BoardUpdateSerializer for PATCH requests
-            BoardDetailSerializer for other requests
+            class: BoardUpdateSerializer for PATCH requests,
+                   BoardDetailSerializer for other requests
         """
         if self.request.method == 'PATCH':
             return BoardUpdateSerializer
         return BoardDetailSerializer
+
+    def check_permissions(self, request):
+        """
+        Verify permissions based on HTTP method.
+        
+        DELETE operations require board ownership.
+        GET/PATCH operations require board membership or ownership.
+        
+        Args:
+            request: The HTTP request
+            
+        Raises:
+            PermissionDenied: If user lacks required permissions
+        """
+        super().check_permissions(request)
+        
+        board = self.get_object()
+        
+        if request.method == 'DELETE':
+            permission = IsBoardOwner()
+            if not permission.has_object_permission(request, self, board):
+                self.permission_denied(
+                    request,
+                    message='Only the board owner can delete this board.'
+                )
+        else:
+            permission = IsBoardOwnerOrMember()
+            if not permission.has_object_permission(request, self, board):
+                self.permission_denied(
+                    request,
+                    message='You must be a member of this board.'
+                )
 
     def update(self, request, *args, **kwargs):
         """
@@ -100,16 +109,20 @@ class BoardDetailView(generics.RetrieveUpdateDestroyAPIView):
             request: HTTP request with board update data
             
         Returns:
-            Response with updated board data (200)
-            Response with validation errors (400)
+            Response: Updated board data (200)
+                      Validation errors (400)
         """
         board = self.get_object()
-
-        input_serializer = BoardUpdateSerializer(board, data=request.data, partial=True)
+        
+        input_serializer = BoardUpdateSerializer(
+            board,
+            data=request.data,
+            partial=True
+        )
         if input_serializer.is_valid():
             board = input_serializer.save()
-            # the PATCH response uses a different shape (owner_data /
-            # members_data) than the GET response - see BoardUpdateResponseSerializer
+            # PATCH response uses different shape than GET response
+            # See BoardUpdateResponseSerializer for details
             output_serializer = BoardUpdateResponseSerializer(board)
             return Response(output_serializer.data, status=status.HTTP_200_OK)
         return Response(input_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -123,15 +136,15 @@ class EmailCheckView(APIView):
 
     def get(self, request):
         """
-        Check if a user exists with the given email.
+        Check if a user exists with the given email address.
         
         Args:
             request: HTTP request with 'email' query parameter
             
         Returns:
-            Response with user data if found (200)
-            Response with error if not found (404)
-            Response with validation errors (400)
+            Response: User data (id, email, fullname) if found (200)
+                      Error message if not found (404)
+                      Validation errors (400)
         """
         serializer = EmailCheckSerializer(data=request.query_params)
         if serializer.is_valid():
@@ -144,7 +157,11 @@ class EmailCheckView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             return Response(
-                {'id': user.id, 'email': user.email, 'fullname': user.fullname},
+                {
+                    'id': user.id,
+                    'email': user.email,
+                    'fullname': user.fullname
+                },
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
