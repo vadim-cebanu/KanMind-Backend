@@ -13,8 +13,14 @@ Follow these steps to set up the project locally:
 
 ### 1. Create Virtual Environment
 
+Linux/Mac:
 ```bash
 python3 -m venv venv
+```
+
+Windows:
+```bash
+python -m venv venv
 ```
 
 ### 2. Activate Virtual Environment
@@ -126,16 +132,6 @@ KanMind-Backend/
 ```bash
 python manage.py makemigrations
 python manage.py migrate
-```
-
-### Run tests
-```bash
-python manage.py test
-```
-
-### Collect static files
-```bash
-python manage.py collectstatic
 ```
 
 ## Technology Stack
